@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Deadline Dashboard</title>
+    <style>
+        /* CSS styles for dashboard */
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .header { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { margin: 0; color: #333; }
+        .header .user-info { float: right; }
+        .header .user-info a { color: #007bff; text-decoration: none; margin-left: 15px; }
+        .email-item { background: white; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; }
+        .email-header { padding: 15px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; }
+        .email-body { padding: 15px; }
+        .email-actions { padding: 15px; background: #f8f9fa; text-align: right; }
+        .completed { opacity: 0.6; text-decoration: line-through; }
+        .urgent-badge { background: #dc3545; color: white; padding: 5px 10px; border-radius: 15px; font-size: 12px; }
+        .btn { padding: 8px 15px; margin-left: 10px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn:hover { opacity: 0.8; }
+        .no-emails { text-align: center; padding: 50px; color: #6c757d; }
+        .status-indicator { padding: 10px; margin-bottom: 20px; border-radius: 5px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .clearfix::after { content: ""; display: table; clear: both; }
+    </style>
+</head>
+<body>
+    <!-- Page header with user info -->
+    <div class="header clearfix">
+        <h1>📧 Email Deadline Dashboard</h1>
+        <div class="user-info">
+            <span>{{ session.user_email }}</span>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </div>
+    
+    <!-- Status indicator showing monitoring is active -->
+    <div class="status-indicator">
+        ✅ Email monitoring is active. Checking for new urgent emails every 5 minutes.
+    </div>
+    
+    <!-- Display urgent emails or empty state -->
+    {% if emails %}
+        <!-- Loop through each urgent email -->
+        {% for email in emails %}
+        <div class="email-item">
+            <!-- Email header with sender and date -->
+            <div class="email-header {% if email[6] %}completed{% endif %}">
+                <div style="float: right;">
+                    <span class="urgent-badge">🚨 URGENT</span>
+                </div>
+                <strong>From:</strong> {{ email[1] }}<br>
+                <strong>Date:</strong> {{ email[4] }}
+            </div>
+            
+            <!-- Email content -->
+            <div class="email-body {% if email[6] %}completed{% endif %}">
+                <h3>{{ email[2] }}</h3>
+                {% if email[3] %}
+                    <p>{{ email[3][:300] }}{% if email[3]|length > 300 %}...{% endif %}</p>
+                {% endif %}
+                <small><strong>Detected:</strong> {{ email[5] }}</small>
+            </div>
+            
+            <!-- Action buttons -->
+            <div class="email-actions">
+                {% if email[6] %}
+                    <a href="{{ url_for('toggle_complete', email_id=email[0]) }}" class="btn btn-warning">Mark as Pending</a>
+                {% else %}
+                    <a href="{{ url_for('toggle_complete', email_id=email[0]) }}" class="btn btn-success">✓ Mark Complete</a>
+                {% endif %}
+                <a href="{{ url_for('delete_email', email_id=email[0]) }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this email?')">🗑️ Delete</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <!-- Empty state when no urgent emails -->
+        <div class="no-emails">
+            <h3>📭 No urgent emails detected yet</h3>
+            <p>The system is monitoring your inbox. Urgent emails will appear here when detected.</p>
+        </div>
+    {% endif %}
+</body>
+</html>
